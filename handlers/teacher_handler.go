@@ -21,3 +21,12 @@ func CreateTeacher(c *gin.Context) {
 		teacher,
 	)
 }
+
+func GetTeachers(c *gin.Context) {
+	var teachers []models.Teacher
+	if err := config.DB.Preload("Students").Find(&teachers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch teachers"})
+		return
+	}
+	c.JSON(http.StatusOK, teachers)
+}
