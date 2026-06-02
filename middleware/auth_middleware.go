@@ -36,6 +36,9 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
+		//parts[0]="Bearer"
+		//parts[1]="abc123456"
+
 		tokenString := parts[1]
 
 		// نتحقق من صحة الـ token
