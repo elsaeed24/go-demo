@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"go-demo/config"
+	"go-demo/dto"
 	"go-demo/models"
 	"net/http"
 
@@ -10,62 +11,53 @@ import (
 
 func CreateStudent(c *gin.Context) {
 
-	var student models.Student
+	var input dto.CreateStudentInput // بنستخدم DTO مش model
 
-	//if variable := function(); condition {
-	//	...
-	//}
-
-	//if age := 20; age >= 18 {
-	//	fmt.Println("Adult")
-	//}
-	//nil = كل حاجة تمام
-
-	//err := c.BindJSON(&student)   = var err error err = c.BindJSON(&student)
-	//
-	//if err != nil {
-	//	...
-	//}
-
-	if err := c.BindJSON(&student); err != nil {
-
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{
-				"error": err.Error(),
-			},
-		)
-
+	// Bind + Validation
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(), // بيرجع validation errors
+		})
 		return
 	}
 
-	//config.DB.Create(&student)
+	// نحول من DTO → Model
+	student := models.Student{
+		Name:      input.Name,
+		Age:       input.Age,
+		TeacherID: input.TeacherID,
+	}
 
-	result := config.DB.Create(&student)
-
-	if result.Error != nil {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": result.Error.Error(),
-			},
-		)
+	// نحفظ في DB
+	if err := config.DB.Create(&student).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	c.JSON(
-		http.StatusCreated,
-		student,
-	)
+	// Response
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Student created",
+		"data":    student,
+	})
 }
 
 func GetStudents(c *gin.Context) {
-	var students []models.Student //create empty slice
+
+	var students []models.Student // slice فاضية
+
+	// Preload = eager loading للعلاقة
 	if err := config.DB.Preload("Teacher").Find(&students).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch students"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch students",
+		})
 		return
 	}
-	c.JSON(http.StatusOK, students)
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": students,
+	})
 }
 
 func UpdateStudent(c *gin.Context) {
@@ -74,42 +66,49 @@ func UpdateStudent(c *gin.Context) {
 
 	id := c.Param("id")
 
+	// نجيب الطالب من DB
 	if err := config.DB.First(&student, id).Error; err != nil {
-		c.JSON(
-			http.StatusNotFound,
-			gin.H{
-				"error": "Student not found",
-			},
-		)
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Student not found",
+		})
 		return
 	}
 
-	// استقبل البيانات الجديدة
-	if err := c.BindJSON(&student); err != nil {
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{
-				"error": err.Error(),
-			},
-		)
+	var input dto.UpdateStudentInput
+
+	// Bind request
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	// حفظ التعديلات
+	// تحديث القيم (بشكل آمن)
+	if input.Name != "" {
+		student.Name = input.Name
+	}
+
+	if input.Age != 0 {
+		student.Age = input.Age
+	}
+
+	if input.TeacherID != 0 {
+		student.TeacherID = input.TeacherID
+	}
+
+	// حفظ
 	if err := config.DB.Save(&student).Error; err != nil {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": err.Error(),
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	c.JSON(
-		http.StatusOK,
-		student,
-	)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Student updated",
+		"data":    student,
+	})
 }
 
 func DeleteStudent(c *gin.Context) {
@@ -118,30 +117,23 @@ func DeleteStudent(c *gin.Context) {
 
 	id := c.Param("id")
 
+	// نتاكد انه موجود
 	if err := config.DB.First(&student, id).Error; err != nil {
-		c.JSON(
-			http.StatusNotFound,
-			gin.H{
-				"error": "Student not found",
-			},
-		)
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Student not found",
+		})
 		return
 	}
 
+	// حذف
 	if err := config.DB.Delete(&student).Error; err != nil {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": err.Error(),
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	c.JSON(
-		http.StatusOK,
-		gin.H{
-			"message": "Student deleted successfully",
-		},
-	)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Student deleted successfully",
+	})
 }

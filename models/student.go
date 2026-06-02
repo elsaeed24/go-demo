@@ -3,7 +3,7 @@ package models
 import "gorm.io/gorm"
 
 type Student struct {
-	gorm.Model
+	gorm.Model // فيه ID + timestamps
 
 	Name string
 	Age  int
