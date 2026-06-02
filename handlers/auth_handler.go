@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Register Gin  ده framework اللي بيشغل السيرفر ويستقبل requests
 // Register بتعمل admin account جديد
 // POST /auth/register
 // Body: { "username": "...", "password": "..." }
