@@ -21,6 +21,15 @@ func CreateStudent(c *gin.Context) {
 		return
 	}
 
+	var teacher models.Teacher
+
+	if err := config.DB.First(&teacher, input.TeacherID).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Teacher not found",
+		})
+		return
+	}
+
 	// نحول من DTO → Model
 	student := models.Student{
 		Name:      input.Name,
