@@ -4,54 +4,41 @@ import (
 	"go-demo/config"
 	"go-demo/dto"
 	"go-demo/models"
+	"go-demo/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+var studentService = services.NewStudentService()
+
 func CreateStudent(c *gin.Context) {
 
-	var input dto.CreateStudentInput // بنستخدم DTO مش model
+	var input dto.CreateStudentInput
 
-	// Bind + Validation
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(), // بيرجع validation errors
-		})
-		return
-	}
-
-	var teacher models.Teacher
-
-	if err := config.DB.First(&teacher, input.TeacherID).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Teacher not found",
-		})
-		return
-	}
-
-	// نحول من DTO → Model
-	student := models.Student{
-		Name:      input.Name,
-		Age:       input.Age,
-		TeacherID: input.TeacherID,
-	}
-
-	// نحفظ في DB
-	if err := config.DB.Create(&student).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	// Response
+	student, err := studentService.Create(input)
+
+	if err != nil {
+
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Student created",
 		"data":    student,
 	})
 }
-
 func GetStudents(c *gin.Context) {
 
 	var students []models.Student // slice فاضية
