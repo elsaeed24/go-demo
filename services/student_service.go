@@ -55,6 +55,18 @@ func (s *StudentService) Create(
 		TeacherID: input.TeacherID,
 	}
 
+	//result := config.DB.Create(&student)
+	//
+	//err := result.Error
+	//
+	//if err != nil {
+	//
+	//	return nil, err
+	//}
+
+	//if variable := something; condition {
+	//}
+
 	// حفظ الطالب في قاعدة البيانات
 	if err := config.DB.Create(&student).Error; err != nil {
 		return nil, err
