@@ -14,10 +14,20 @@ import (
 type StudentService struct{}
 
 // NewStudentService Constructor لإنشاء instance من الـ service
+// Create StudentService Instance
+// *StudentService الفنكشن هترجع Pointer إلى StudentService
+
+// أنشئ Function اسمها NewStudentService، وعندما يتم استدعاؤها أنشئ كائن جديد من StudentService وأرجع Pointer إليه.
 func NewStudentService() *StudentService {
 	return &StudentService{}
+	//StudentService{}  دي إنشاء Struct جديد.
+	// & هات عنوان الكائن في الذاكرة
 }
 
+// Create (s *StudentService) is Receiver
+// * Pointer Receiver to StudentService
+// يعني الفنكشن تشتغل على الـ Object الحقيقي.
+// مش نسخة منه.
 // Create Student
 func (s *StudentService) Create(
 	input dto.CreateStudentInput,
